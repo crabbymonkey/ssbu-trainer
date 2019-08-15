@@ -1,12 +1,17 @@
-{{define "dedicated"}}
+{{define "lesson"}}
   {{template "header" .}}
   <div class="center-container centered">
-    <h2>You rolled a D{{.Die.High}}</h2>
-    <h3 id="rollmsg">it was a {{.Die.Roll}}!</h3>
+    <h2>Welcome to {{.Lesson.Character}} lesson {{.Lesson.LessonNumber}}</h2>
     <br>
-    <button id="rerollbtn" type="button" class="btn btn-info btn-lg">Reroll</button>
+    <p>
+      {{.Lesson.Description}}
+    </p>
+    <br>
+    <img src="{{.Lesson.Gif}}">
+    <br>
+    <button id="next" type="button" class="btn btn-info btn-lg">Go To Practice</button>
   </div>
-  <script type="text/javascript">
+  <!-- <script type="text/javascript">
     $("#rerollbtn").click(function() {
       var newVal = Math.floor((Math.random() * {{.Die.High}}) + {{.Die.Low}});
       document.getElementById("rollmsg").innerHTML = "Rolling...";
@@ -14,6 +19,6 @@
         document.getElementById("rollmsg").innerHTML = "it was a " + newVal + "!";
       }, 500);
     });
-  </script>
+  </script> -->
   {{template "footer" .}}
 {{end}}

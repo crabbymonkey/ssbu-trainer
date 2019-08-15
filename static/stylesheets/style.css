@@ -1,6 +1,3 @@
-body {
-}
-
 .done {
   text-decoration: line-through;
 }
@@ -243,4 +240,9 @@ li:hover > .drop-menu li:nth-child(6) {
     -webkit-transform: scale(1) translateY(0px);
             transform: scale(1) translateY(0px);
   }
+}
+
+.custom-glyphicon-img {
+  height: 20px;
+  padding-bottom: 3px;
 }

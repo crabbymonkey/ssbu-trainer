@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -18,9 +17,7 @@ var templates = template.Must(template.ParseFiles(
 	"templates/header.html",
 	"templates/footer.html",
 	"templates/index.html",
-	"templates/commonDice.html",
-	"templates/customDice.html",
-	"templates/dedicatedDice.html",
+	"templates/basicTraining.html",
 	"templates/todo.html"))
 
 //Display the named template
@@ -44,53 +41,24 @@ func todoHandler(w http.ResponseWriter, r *http.Request) {
 			{Title: "Setup CI", Done: false},
 			{Title: "Setup CD", Done: true},
 			{Title: "Make Test Cases", Done: false},
-			{Title: "Basic Dice Rolls Based on URL", Done: true},
 			{Title: "Flushout Navbar", Done: false},
 			{Title: "Create 404", Done: true},
-			{Title: "Create Common Dice Set Page", Done: false},
-			{Title: "Create Custom Dice Set Page", Done: false},
-			{Title: "Add Dice Graphics", Done: true},
 			{Title: "Add How to Use Page", Done: false},
-			{Title: "Flushout Dedicated Dice Page with Reroll button", Done: true},
 			{Title: "Make a logo", Done: false},
-			{Title: "Make a AJAX callback to server to get dice roll values", Done: false},
 		},
 	}
 	display(w, "todo", data)
 }
 
-func dedicatedDiceHandler(w http.ResponseWriter, r *http.Request) {
-	inputInt, err := strconv.Atoi(r.URL.Path[1:])
-	if err != nil {
-		// handle error
-		http.ServeFile(w, r, "static/html/issue.html")
-	}
-
-	data := DiePage{
-		PageTitle: "D" + r.URL.Path[1:],
-		Die:       Dice{High: inputInt, Low: 1},
-	}
-
-	display(w, "dedicated", data)
+func lessonHandler(w http.ResponseWriter, r *http.Request, lesson Lesson) {
+	display(w, "lesson", lesson)
 }
 
-func commonSetHandler(w http.ResponseWriter, r *http.Request) {
-	data := DiceSetPage{
-		PageTitle: "Common Dice Set",
-		Dice: []Dice{
-			{High: 20, Low: 1},
-			{High: 12, Low: 1},
-			{High: 10, Low: 1},
-			{High: 8, Low: 1},
-			{High: 6, Low: 1},
-			{High: 4, Low: 1},
-		},
+func basicTrainingHandler(w http.ResponseWriter, r *http.Request) {
+	data := Page{
+		PageTitle: "Basic Training",
 	}
-	display(w, "common", data)
-}
-
-func customSetHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Make your own set of dice!")
+	display(w, "basicTraining", data)
 }
 
 func randomPageHandler(w http.ResponseWriter, r *http.Request) {
@@ -100,8 +68,16 @@ func randomPageHandler(w http.ResponseWriter, r *http.Request) {
 	// Else show the 404 page
 	if r.URL.Path == "/" {
 		homeHandler(w, r)
-	} else if _, err := strconv.Atoi(r.URL.Path[1:]); err == nil {
-		dedicatedDiceHandler(w, r)
+	} else if r.URL.Path == "/basic/lesson1" {
+		lesson := Lesson{
+			PageTitle:   "Short Hop",
+			Name:        "The Short Hop",
+			Character:   "Basic",
+			Number:      1,
+			Gif:         "https://ftp.crabbymonkey.org/smash/smash_gifs/smash_examples/example_short_hop.gif",
+			Description: "This is where I type explenations, Lorem ipsum dolor sit amet, fabulas nusquam facilisi per cu, ex ius voluptua principes. Quo te simul nullam. Illud aperiam accusamus mel no. Ex oporteat perfecto petentium qui, meis solum utamur sit te, per reque eligendi appellantur ei. Posse dictas laoreet pri ut, vide tamquam quaeque at his. Eu his bonorum dolorum, est vidisse discere verterem cu. Vim an veritus adipisci. An quaeque alienum electram vis, possim diceret efficiendi ex vis. Id offendit moderatius intellegam pro, ne usu atqui verterem philosophia, sit eu feugiat gloriatur expetendis. Vix ei aperiri scripserit.",
+		}
+		lessonHandler(w, r, lesson)
 	} else if strings.HasSuffix(r.URL.Path[1:], ".html") {
 		http.ServeFile(w, r, "static/html/"+r.URL.Path[1:])
 	} else {
@@ -145,8 +121,7 @@ func getPort() string {
 func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	http.HandleFunc("/common/", commonSetHandler)
-	http.HandleFunc("/custom/", customSetHandler)
+	http.HandleFunc("/basic/", basicTrainingHandler)
 	http.HandleFunc("/todo/", todoHandler)
 
 	http.HandleFunc("/", randomPageHandler)
@@ -200,4 +175,14 @@ type RolledDice struct {
 	High      int
 	Low       int
 	Value     int
+}
+
+//Lesson is used to dynamicly create a lesson page
+type Lesson struct {
+	PageTitle   string
+	Name        string
+	Character   string
+	Number      int
+	Gif         string
+	Description string
 }
