@@ -1,23 +1,28 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"html/template"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 //Compile templates on start
 var templates = template.Must(template.ParseFiles(
-	"templates/notFound.html",
-	"templates/header.html",
-	"templates/footer.html",
-	"templates/index.html",
+	"templates/addCourse.html",
 	"templates/basicTraining.html",
+	"templates/footer.html",
+	"templates/header.html",
+	"templates/index.html",
+	"templates/lesson.html",
 	"templates/todo.html"))
 
 //Display the named template
@@ -50,7 +55,48 @@ func todoHandler(w http.ResponseWriter, r *http.Request) {
 	display(w, "todo", data)
 }
 
-func lessonHandler(w http.ResponseWriter, r *http.Request, lesson Lesson) {
+// getCharater(db *sql.DB, name string) { // &Character{
+// age := 27
+// row, err := db.Query("SELECT id FROM characters WHERE name=?", name)
+// if err != nil {
+// 	log.Fatal(err)
+// }
+// defer rows.Close()
+
+// for rows.Next() {
+// 	var char Character
+// 	if err := rows.Scan(&name); err != nil {
+// 		// Check for a scan error.
+// 		// Query rows will be closed with defer.
+// 		log.Fatal(err)
+// 	}
+// 	names = append(names, name)
+// }
+// // If the database is being written to ensure to check for Close
+// // errors that may be returned from the driver. The query may
+// // encounter an auto-commit error and be forced to rollback changes.
+// rerr := rows.Close()
+// if rerr != nil {
+// 	log.Fatal(err)
+// }
+
+// // Rows.Err will report the last error encountered by Rows.Scan.
+// if err := rows.Err(); err != nil {
+// 	log.Fatal(err)
+// }
+// fmt.Printf("%s are %d years old", strings.Join(names, ", "), age)
+// }
+
+func lessonHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("IN LESSON: ")
+	fmt.Println("Base of the Path = " + path.Base(r.URL.Path))
+	lesson := Lesson{
+		PageTitle:   "Short Hop",
+		Name:        "The Short Hop",
+		Number:      1,
+		Gif:         "https://ftp.crabbymonkey.org/smash/smash_gifs/smash_examples/example_short_hop.gif",
+		Description: "This is where I type explenations, Lorem ipsum dolor sit amet, fabulas nusquam facilisi per cu, ex ius voluptua principes. Quo te simul nullam. Illud aperiam accusamus mel no. Ex oporteat perfecto petentium qui, meis solum utamur sit te, per reque eligendi appellantur ei. Posse dictas laoreet pri ut, vide tamquam quaeque at his. Eu his bonorum dolorum, est vidisse discere verterem cu. Vim an veritus adipisci. An quaeque alienum electram vis, possim diceret efficiendi ex vis. Id offendit moderatius intellegam pro, ne usu atqui verterem philosophia, sit eu feugiat gloriatur expetendis. Vix ei aperiri scripserit.",
+	}
 	display(w, "lesson", lesson)
 }
 
@@ -68,16 +114,8 @@ func randomPageHandler(w http.ResponseWriter, r *http.Request) {
 	// Else show the 404 page
 	if r.URL.Path == "/" {
 		homeHandler(w, r)
-	} else if r.URL.Path == "/basic/lesson1" {
-		lesson := Lesson{
-			PageTitle:   "Short Hop",
-			Name:        "The Short Hop",
-			Character:   "Basic",
-			Number:      1,
-			Gif:         "https://ftp.crabbymonkey.org/smash/smash_gifs/smash_examples/example_short_hop.gif",
-			Description: "This is where I type explenations, Lorem ipsum dolor sit amet, fabulas nusquam facilisi per cu, ex ius voluptua principes. Quo te simul nullam. Illud aperiam accusamus mel no. Ex oporteat perfecto petentium qui, meis solum utamur sit te, per reque eligendi appellantur ei. Posse dictas laoreet pri ut, vide tamquam quaeque at his. Eu his bonorum dolorum, est vidisse discere verterem cu. Vim an veritus adipisci. An quaeque alienum electram vis, possim diceret efficiendi ex vis. Id offendit moderatius intellegam pro, ne usu atqui verterem philosophia, sit eu feugiat gloriatur expetendis. Vix ei aperiri scripserit.",
-		}
-		lessonHandler(w, r, lesson)
+	} else if r.URL.Path == "/lesson/lesson1" {
+		lessonHandler(w, r)
 	} else if strings.HasSuffix(r.URL.Path[1:], ".html") {
 		http.ServeFile(w, r, "static/html/"+r.URL.Path[1:])
 	} else {
@@ -107,10 +145,6 @@ var funcMap = template.FuncMap{
 	"randomValue": randomValue,
 }
 
-func (d Dice) roll() int {
-	return randomValue(d.Low, d.High)
-}
-
 func getPort() string {
 	if value, ok := os.LookupEnv("PORT"); ok {
 		return ":" + value
@@ -118,11 +152,42 @@ func getPort() string {
 	return ":8080"
 }
 
+func dbHandler(w http.ResponseWriter, r *http.Request) {
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS character (character_id SERIAL PRIMARY KEY, name VARCHAR(50) UNIQUE NOT NULL)")
+	if err != nil {
+		fmt.Println(fmt.Sprintf("Error creating database table character: %q", err))
+		return
+	}
+
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS lesson (lesson_id SERIAL PRIMARY KEY, character_id INTEGER REFERENCES character(character_id) NOT NULL, name VARCHAR(50) UNIQUE NOT NULL)")
+	if err != nil {
+		fmt.Println(fmt.Sprintf("Error creating database table lesson: %q", err))
+		return
+	}
+
+	data := Page{
+		PageTitle: "Database",
+	}
+	display(w, "basicTraining", data)
+}
+
+var (
+	db *sql.DB
+)
+
 func main() {
+	var err error
+	db, err = sql.Open("postgres", os.Getenv("DATABASE_URL")+" sslmode=disable")
+	if err != nil {
+		log.Fatalf("Error opening database: %q", err)
+	}
+
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	http.HandleFunc("/basic/", basicTrainingHandler)
 	http.HandleFunc("/todo/", todoHandler)
+	http.HandleFunc("/lesson", lessonHandler)
+	http.HandleFunc("/db", dbHandler)
 
 	http.HandleFunc("/", randomPageHandler)
 
@@ -147,34 +212,6 @@ type TodoPageData struct {
 	PageTitle string
 	ListTitle string
 	Todos     []Todo
-}
-
-// DiceSetPage with a page title and a list of Dice
-type DiceSetPage struct {
-	PageTitle string
-	Dice      []Dice
-}
-
-// DiePage with a page title and a Dice
-type DiePage struct {
-	PageTitle string
-	Die       Dice
-}
-
-// Dice object e.g. D20 would have a High of 20 and Low of 1.
-type Dice struct {
-	High int
-	Low  int
-}
-
-// RolledDice with page title, high value, low value and the rolled value
-// Note that you can add a function as a part of a struct that you can define when you create the object
-// Roll func() int
-type RolledDice struct {
-	PageTitle string
-	High      int
-	Low       int
-	Value     int
 }
 
 //Lesson is used to dynamicly create a lesson page
