@@ -1,0 +1,14 @@
+{{define "todo"}}
+  {{template "header" .}}
+  <h1>{{.ListTitle}}</h1>
+  <ul>
+      {{range .Todos}}
+          {{if .Done}}
+              <li class="done">{{.Title}}</li>
+          {{else}}
+              <li>{{.Title}}</li>
+          {{end}}
+      {{end}}
+  </ul>
+  {{template "footer" .}}
+{{end}}
