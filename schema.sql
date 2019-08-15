@@ -1,5 +1,5 @@
 CREATE TABLE character (
-    character_id SERIAL PRIMARY KEY, 
+    id SERIAL, 
     name VARCHAR(50) UNIQUE NOT NULL,
     PRIMARY KEY(id)
 );
