@@ -1,0 +1,95 @@
+{{define "admin"}}
+  {{template "header" .}}
+
+    
+  <div style="padding-left: 20px">
+    <h1>Admin Page</h1>
+    This is the secret admin page used to do database things. Trespassers beware, there are passwords!
+    <hr>
+
+    <h3>Add Character to Database</h3>
+    <form method="post" action="/addchar" enctype="application/x-www-form-urlencoded">
+      Character Name: <br>
+      <input type="text" id="name" name="name"> <br>
+
+      Password: <br>
+      <input type="password" id="password" name="password">
+
+      <br><br>
+        <button id="charSaveBtn" type="submit">Submit</button>
+    </form>
+
+    <hr>
+
+    <h3>Add Lesson to Database</h3>
+    <form method="post" action="/addless" enctype="application/x-www-form-urlencoded">
+
+      Lesson Name: <br>
+      <input type="text" id="name" name="name"> <br>
+      
+      Character ID: <br>
+      <input type="text" id="char-id" name="char-id"> <br>
+      
+      Lesson Number: <br>
+      <input type="text" id="number" name="number"> <br>
+      
+      Gif URL: <br>
+      <input type="text" id="gif" name="gif"> <br>
+      
+      Description: <br>
+      <input type="text" id="description" name="description"> <br>
+      
+      Learning Time Seconds: <br>
+      <input type="text" id="learn-time" name="learn-time"> <br>
+      
+      Training Time Seconds: <br>
+      <input type="text" id="train-time" name="train-time"> <br>
+
+      Test Time Seconds: <br>
+      <input type="text" id="test-time" name="test-time"> <br>
+      
+      Password: <br>
+      <input type="password" id="password" name="password">
+
+      <br><br>
+        <button id="charSaveBtn" type="submit">Submit</button>
+    </form>
+
+    <hr>
+
+    <h3>Remove Character from Database</h3>
+    <form method="post" action="/rmchar" enctype="application/x-www-form-urlencoded">
+
+      Character ID: <br>
+      <input type="text" id="id" name="id"> <br>
+      
+      Password: <br>
+      <input type="password" id="password" name="password">
+
+      <br><br>
+        <button id="charSaveBtn" type="submit">Submit</button>
+    </form>
+
+    <hr>
+
+    <h3>Remove Lesson from Database</h3>
+    <form method="post" action="/rmless" enctype="application/x-www-form-urlencoded">
+
+      Lesson ID: <br>
+      <input type="text" id="id" name="id"> <br>
+      
+      Password: <br>
+      <input type="password" id="password" name="password">
+
+      <br><br>
+        <button id="charSaveBtn" type="submit">Submit</button>
+    </form>
+
+    <br>
+    <br>
+    <br>
+    <br>
+    <hr>
+  </div>
+  {{template "footer" .}}
+{{end}}
