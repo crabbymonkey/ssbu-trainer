@@ -18,6 +18,7 @@ import (
 //Compile templates on start
 var templates = template.Must(template.ParseFiles(
 	"templates/addCourse.html",
+	"templates/basicContent.html",
 	"templates/basicTraining.html",
 	"templates/footer.html",
 	"templates/header.html",
@@ -55,43 +56,10 @@ func todoHandler(w http.ResponseWriter, r *http.Request) {
 	display(w, "todo", data)
 }
 
-// getCharater(db *sql.DB, name string) { // &Character{
-// age := 27
-// row, err := db.Query("SELECT id FROM characters WHERE name=?", name)
-// if err != nil {
-// 	log.Fatal(err)
-// }
-// defer rows.Close()
-
-// for rows.Next() {
-// 	var char Character
-// 	if err := rows.Scan(&name); err != nil {
-// 		// Check for a scan error.
-// 		// Query rows will be closed with defer.
-// 		log.Fatal(err)
-// 	}
-// 	names = append(names, name)
-// }
-// // If the database is being written to ensure to check for Close
-// // errors that may be returned from the driver. The query may
-// // encounter an auto-commit error and be forced to rollback changes.
-// rerr := rows.Close()
-// if rerr != nil {
-// 	log.Fatal(err)
-// }
-
-// // Rows.Err will report the last error encountered by Rows.Scan.
-// if err := rows.Err(); err != nil {
-// 	log.Fatal(err)
-// }
-// fmt.Printf("%s are %d years old", strings.Join(names, ", "), age)
-// }
-
 func lessonHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("IN LESSON: ")
 	fmt.Println("Base of the Path = " + path.Base(r.URL.Path))
 	lesson := Lesson{
-		PageTitle:   "Short Hop",
 		Name:        "The Short Hop",
 		Number:      1,
 		Gif:         "https://ftp.crabbymonkey.org/smash/smash_gifs/smash_examples/example_short_hop.gif",
@@ -153,22 +121,66 @@ func getPort() string {
 }
 
 func dbHandler(w http.ResponseWriter, r *http.Request) {
-	_, err := db.Exec("CREATE TABLE IF NOT EXISTS character (character_id SERIAL PRIMARY KEY, name VARCHAR(50) UNIQUE NOT NULL)")
+	var dbToString []string
+
+	rows, err := db.Query("SELECT * FROM character")
 	if err != nil {
-		fmt.Println(fmt.Sprintf("Error creating database table character: %q", err))
+		log.Fatalf("Error opening database: %q", err)
+		// return, so no else is needed
 		return
 	}
+	defer rows.Close()
 
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS lesson (lesson_id SERIAL PRIMARY KEY, character_id INTEGER REFERENCES character(character_id) NOT NULL, name VARCHAR(50) UNIQUE NOT NULL)")
+	for rows.Next() {
+		var (
+			id   int
+			name string
+		)
+		if err := rows.Scan(&id, &name); err != nil {
+			panic(err)
+		}
+		dbToString = append(dbToString, fmt.Sprintf("%d | %s", id, name))
+	}
+	if err := rows.Err(); err != nil {
+		panic(err)
+	}
+
+	dbToString = append(dbToString, "-------------------------------------------------------")
+
+	rows, err = db.Query("SELECT * FROM lesson")
 	if err != nil {
-		fmt.Println(fmt.Sprintf("Error creating database table lesson: %q", err))
+		log.Fatalf("Error opening database: %q", err)
+		// return, so no else is needed
 		return
 	}
+	defer rows.Close()
 
-	data := Page{
-		PageTitle: "Database",
+	for rows.Next() {
+		var (
+			id                  int
+			name                string
+			characterID         int
+			number              int
+			gif                 string
+			description         string
+			learningTimeSeconds int
+			trainingTimeSeconds int
+			testTimeSeconds     int
+		)
+		if err := rows.Scan(&id, &characterID, &name, &number, &gif, &description, &learningTimeSeconds, &trainingTimeSeconds, &testTimeSeconds); err != nil {
+			panic(err)
+		}
+		dbToString = append(dbToString, fmt.Sprintf("%d | %s | %d | %d | %s | %s | %d | %d | %d |\n", id, name, characterID, number, gif, description, learningTimeSeconds, trainingTimeSeconds, testTimeSeconds))
 	}
-	display(w, "basicTraining", data)
+	if err := rows.Err(); err != nil {
+		panic(err)
+	}
+
+	data := PageContent{
+		PageTitle:   "Database",
+		PageContent: dbToString,
+	}
+	display(w, "basicContent", data)
 }
 
 var (
@@ -177,7 +189,7 @@ var (
 
 func main() {
 	var err error
-	db, err = sql.Open("postgres", os.Getenv("DATABASE_URL")+" sslmode=disable")
+	db, err = sql.Open("postgres", os.Getenv("DATABASE_URL")+"?sslmode=disable")
 	if err != nil {
 		log.Fatalf("Error opening database: %q", err)
 	}
@@ -192,6 +204,7 @@ func main() {
 	http.HandleFunc("/", randomPageHandler)
 
 	port := getPort()
+	fmt.Println("Connected to DB " + os.Getenv("DATABASE_URL"))
 	fmt.Println("Now listening to port " + port)
 	log.Fatal(http.ListenAndServe(port, nil))
 }
@@ -199,6 +212,12 @@ func main() {
 // Page structure
 type Page struct {
 	PageTitle string
+}
+
+// PageContent structure
+type PageContent struct {
+	PageTitle   string
+	PageContent []string
 }
 
 // Todo struct
@@ -216,10 +235,19 @@ type TodoPageData struct {
 
 //Lesson is used to dynamicly create a lesson page
 type Lesson struct {
-	PageTitle   string
-	Name        string
-	Character   string
-	Number      int
-	Gif         string
-	Description string
+	ID                  int
+	Name                string
+	CharacterID         int
+	Number              int
+	Gif                 string
+	Description         string
+	LearningTimeSeconds int
+	TrainingTimeSeconds int
+	TestTimeSeconds     int
+}
+
+// LessonPage is the page for the Lesson
+type LessonPage struct {
+	PageTitle string
+	Lesson    Lesson
 }

@@ -1,0 +1,12 @@
+{{define "basicContent"}}
+  {{template "header" .}}
+  <p style="white-space:nowrap">
+    {{range .PageContent}}  
+      {{.}}
+      <br>
+      <br>
+    {{end}}
+  </p>
+  
+  {{template "footer" .}}
+{{end}}

@@ -13,3 +13,5 @@
 
 static/.DS_Store
 *.DS_Store
+
+go.sum
