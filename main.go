@@ -428,8 +428,10 @@ type Lesson struct {
 
 // Character struct
 type Character struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	Icon        string `json:"icon"`
 }
 
 // CharacterCreation struct

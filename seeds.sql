@@ -1,7 +1,7 @@
-INSERT INTO character (name)
-VALUES ('basic'),
-       ('fox'),
-       ('link');
+INSERT INTO character (name, display_name, icon)
+VALUES ('basic', 'Basic Training', NULL),
+       ('fox', 'Fox', 'static/img/icons/FoxHeadSSBUWebsite.png'),
+       ('link', 'Link', 'static/img/icons/LinkHeadSSBUWebsite.png');
 
 INSERT INTO lesson (name, character_id, number, gif, description, learning_time_seconds, training_time_seconds, test_time_seconds)
 VALUES (

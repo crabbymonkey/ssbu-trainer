@@ -1,6 +1,8 @@
 CREATE TABLE character (
     id SERIAL, 
     name VARCHAR(50) UNIQUE NOT NULL,
+    display_name VARCHAR(50) UNIQUE NOT NULL,
+    icon VARCHAR(255) UNIQUE,
     PRIMARY KEY(id)
 );
 
